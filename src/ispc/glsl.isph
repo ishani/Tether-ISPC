@@ -1,0 +1,15 @@
+// ---------------------------------------------------------------------------------------------------------------------
+// Tether-ISPC by Harry Denholm, ishani.org 2020
+// https://github.com/ishani/Tether-ISPC
+// ---------------------------------------------------------------------------------------------------------------------
+// 
+//
+
+typedef float2 vec2;
+typedef float3 vec3;
+typedef float4 vec4;
+
+typedef float2x2 mat2;
+typedef float3x3 mat3;
+typedef float4x4 mat4;
+

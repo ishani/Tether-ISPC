@@ -1,0 +1,58 @@
+// ---------------------------------------------------------------------------------------------------------------------
+// Tether-ISPC by Harry Denholm, ishani.org 2020
+// https://github.com/ishani/Tether-ISPC
+// ---------------------------------------------------------------------------------------------------------------------
+// sdf functions, mostly from https://www.iquilezles.org
+//
+
+#if !defined( _tether_decl )
+#error this inl file should only be included via common.isph
+#endif
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+#if _TETHER_ARG_2
+
+_tether_decl float sdfOnion( _tether_arg1_float sdf, _tether_arg2_float thickness )
+{
+    return STDN abs(sdf) - thickness;
+}
+
+_tether_decl float sdfUnion( _tether_arg1_float d1, _tether_arg2_float d2 ) 
+{
+    return _fmin(d1, d2); 
+}
+
+_tether_decl float sdfSubtraction( _tether_arg1_float d1, _tether_arg2_float d2 )
+{ 
+    return _fmax(-d1, d2); 
+}
+
+_tether_decl float sdfIntersection( _tether_arg1_float d1, _tether_arg2_float d2 ) 
+{ 
+    return _fmax(d1, d2); 
+}
+
+#endif // _TETHER_ARG_2
+
+#if _TETHER_ARG_3
+
+_tether_decl float sdfSmoothUnion( _tether_arg1_float d1, _tether_arg2_float d2, _tether_arg3_float k ) 
+{
+    const _tether_var float h = saturate( 0.5f + 0.5f * (d2-d1) / k );
+    return lerp( d2, d1, h ) - k * h * ( 1.0f - h ); 
+}
+
+_tether_decl float sdfSmoothSubtraction( _tether_arg1_float d1, _tether_arg2_float d2, _tether_arg3_float k ) 
+{
+    const _tether_var float h = saturate( 0.5f - 0.5f * ( d2 + d1 ) / k );
+    return lerp( d2, -d1, h ) + k * h * ( 1.0f - h ); 
+}
+
+_tether_decl float sdfSmoothIntersection( _tether_arg1_float d1, _tether_arg2_float d2, _tether_arg3_float k ) 
+{
+    const _tether_var float h = saturate( 0.5f - 0.5f * ( d2 - d1 ) / k );
+    return lerp( d2, d1, h ) + k * h * ( 1.0f - h ); 
+}
+
+#endif // _TETHER_ARG_3

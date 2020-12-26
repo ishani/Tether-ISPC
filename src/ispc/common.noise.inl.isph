@@ -1,0 +1,173 @@
+// ---------------------------------------------------------------------------------------------------------------------
+// Tether-ISPC by Harry Denholm, ishani.org 2020
+// https://github.com/ishani/Tether-ISPC
+// ---------------------------------------------------------------------------------------------------------------------
+// 
+//  ported from Wombat by Brian Sharpe [http://briansharpe.wordpress.com]
+//  An efficient texture-free GLSL procedural noise library
+//  Source: https://github.com/BrianSharpe/Wombat
+//  Derived from: https://github.com/BrianSharpe/GPU-Noise-Lib
+
+#if !defined( _tether_decl )
+#error this inl file should only be included via common.isph
+#endif
+
+
+#if _TETHER_ARG_1
+
+// ---------------------------------------------------------------------------------------------------------------------
+//
+//  Perlin Noise 3D
+//  Return value range of -1.0->1.0
+//
+//  https://github.com/BrianSharpe/Wombat/blob/master/Perlin3D.glsl
+//
+_tether_decl float perlin3D( _tether_arg1(float3) P )
+{
+    ispc_construct( uniform static const float3 c_SOMELARGEFLOATS, { 635.298681f,  682.357502f,  668.926525f } );
+    ispc_construct( uniform static const float3 c_ZINC,            {  48.500388f,   65.294118f,   63.934599f } );
+
+    ispc_construct_float3_single( uniform static const float3 c_RcpSixtyNine, 1.0f / 69.0f );
+    ispc_construct_float3_single( uniform static const float3 c_SixtyNinePt5, 69.0f - 1.5f );
+
+    ispc_construct_float3_single( uniform static const float3 c_111, 1.0f );
+
+    ispc_construct( uniform static const float4 c_50_161_50_161,   {       50.0f,       161.0f,        50.0f,       161.0f } );
+
+
+    // establish our grid cell and unit position
+    _tether_var float3 Pi       = floor(P);
+    _tether_var float3 Pf       = P - Pi;
+    _tether_var float3 Pf_min1  = Pf - 1.0;
+
+    // clamp the domain
+    Pi = Pi - floor( Pi * c_RcpSixtyNine ) * 69.0f;
+    _tether_var float3 Pi_inc1 = step( Pi, 69.0f - 1.5f ) * ( Pi + c_111 );
+
+    // calculate the hash
+    ispc_construct( _tether_var float4 Pt, { Pi.x, Pi.y, Pi_inc1.x, Pi_inc1.y } );
+    Pt += c_50_161_50_161;
+    Pt *= Pt;
+    Pt = Pt.xzxz * Pt.yyww;
+
+    _tether_var float3 lowz_mod, highz_mod;
+
+    lowz_mod  = c_111 / ( c_SOMELARGEFLOATS + Pi.zzz * c_ZINC );
+    highz_mod = c_111 / ( c_SOMELARGEFLOATS + Pi_inc1.zzz * c_ZINC );
+
+    _tether_var float4 hashx0 = frac( Pt * lowz_mod.xxxx );
+    _tether_var float4 hashx1 = frac( Pt * highz_mod.xxxx );
+    _tether_var float4 hashy0 = frac( Pt * lowz_mod.yyyy );
+    _tether_var float4 hashy1 = frac( Pt * highz_mod.yyyy );
+    _tether_var float4 hashz0 = frac( Pt * lowz_mod.zzzz );
+    _tether_var float4 hashz1 = frac( Pt * highz_mod.zzzz );
+
+    ispc_construct( _tether_var float4 Pf_xyxy, { Pf.x, Pf_min1.x, Pf.x,      Pf_min1.x } );  // vec2( Pf.x, Pf_min1.x ).xyxy
+    ispc_construct( _tether_var float4 Pf_xxyy, { Pf.y,      Pf.y, Pf_min1.y, Pf_min1.y } );  // vec2( Pf.y, Pf_min1.y ).xxyy
+
+    // calculate the gradients
+    _tether_var float4 grad_x0 = hashx0 - 0.49999f;
+    _tether_var float4 grad_y0 = hashy0 - 0.49999f;
+    _tether_var float4 grad_z0 = hashz0 - 0.49999f;
+    _tether_var float4 grad_x1 = hashx1 - 0.49999f;
+    _tether_var float4 grad_y1 = hashy1 - 0.49999f;
+    _tether_var float4 grad_z1 = hashz1 - 0.49999f;
+    _tether_var float4 grad_results_0 = rsqrt( grad_x0 * grad_x0 + grad_y0 * grad_y0 + grad_z0 * grad_z0 ) * ( Pf_xyxy * grad_x0 + Pf_xxyy * grad_y0 + Pf.zzzz * grad_z0 );
+    _tether_var float4 grad_results_1 = rsqrt( grad_x1 * grad_x1 + grad_y1 * grad_y1 + grad_z1 * grad_z1 ) * ( Pf_xyxy * grad_x1 + Pf_xxyy * grad_y1 + Pf_min1.zzzz * grad_z1 );
+
+    // Classic Perlin Interpolation
+    _tether_var float3 blend = Pf * Pf * Pf * (Pf * (Pf * 6.0 - 15.0) + 10.0);
+    _tether_var float4 res0 = lerp( grad_results_0, grad_results_1, blend.z );
+
+    ispc_construct( _tether_var float4 blend2, { blend.x, blend.y, 1.0f - blend.x, 1.0f - blend.y } );
+    _tether_var float final = dot( res0, blend2.zxzx * blend2.wwyy );
+
+    return ( final * 1.1547005383792515290182975610039f );  // scale things to a strict -1.0->1.0 range  *= 1.0/sqrt(0.75)
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+//
+//  Cellular Noise 2D Deriv
+//  Return value range of 0.0->1.0, with format vec3( value, xderiv, yderiv )
+//
+//  https://github.com/BrianSharpe/Wombat/blob/master/Cellular2D_Deriv.glsl
+//
+_tether_decl float cellular2D( _tether_arg1(float2) P )
+{
+    ispc_construct_float4_single( uniform static const float4 c_RcpSeventyOne, 1.0f / 71.0f );
+
+    ispc_construct_float4_single( uniform static const float4 c_Rcp951, 1.0f / 951.135664f );
+    ispc_construct_float4_single( uniform static const float4 c_Rcp642, 1.0f / 642.949883f );
+
+    ispc_construct_float4_single( uniform static const float4 c_PointTwoFive, 0.25f );
+
+    ispc_construct( uniform static const float4 c_26_161_26_161,   {       26.0f,       161.0f,        26.0f,       161.0f } );
+
+    ispc_construct( uniform static const float4 c_0101,   { 0.0f, 1.0f, 0.0f, 1.0f } );
+    ispc_construct( uniform static const float4 c_0011,   { 0.0f, 0.0f, 1.0f, 1.0f } );
+
+
+    //  establish our grid cell and unit position
+    _tether_var float2 Pi       = floor(P);
+    _tether_var float2 Pf       = P - Pi;
+
+    //  calculate the hash
+    ispc_construct( _tether_var float4 Pt, { Pi.x, Pi.y, Pi.x + 1.0f, Pi.y + 1.0f } );
+
+    Pt = Pt - floor( Pt * c_RcpSeventyOne ) * 71.0f;
+    Pt += c_26_161_26_161;
+    Pt *= Pt;
+    Pt = Pt.xzxz * Pt.yyww;
+    _tether_var float4 hash_x = frac( Pt * c_Rcp951 );
+    _tether_var float4 hash_y = frac( Pt * c_Rcp642 );
+
+    //  generate the 4 points
+    hash_x = hash_x * 2.0 - 1.0;
+    hash_y = hash_y * 2.0 - 1.0;
+
+    hash_x = ( ( hash_x * hash_x * hash_x ) - sign( hash_x ) ) * c_PointTwoFive + c_0101;
+    hash_y = ( ( hash_y * hash_y * hash_y ) - sign( hash_y ) ) * c_PointTwoFive + c_0011;
+
+    //  return the closest squared distance
+    _tether_var float4 dx = Pf.xxxx - hash_x;
+    _tether_var float4 dy = Pf.yyyy - hash_y;
+    _tether_var float4 d = dx * dx + dy * dy;
+
+    ispc_construct( _tether_var float2 d2, { _fmin(d.x, d.z), _fmin(d.y, d.w) } );
+
+    return _fmin(d2.x, d2.y) * ( 1.0f / 1.125f ); // return a value scaled to 0.0->1.0
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+//
+// from Inigo Quilez, https://www.shadertoy.com/view/4sfGzS 
+//
+_tether_decl float noise( _tether_arg1(float3) x )
+{
+    ispc_construct( uniform static const float3 c_f3_000, { 0.0f, 0.0f, 0.0f } );
+    ispc_construct( uniform static const float3 c_f3_100, { 1.0f, 0.0f, 0.0f } );
+    ispc_construct( uniform static const float3 c_f3_010, { 0.0f, 1.0f, 0.0f } );
+    ispc_construct( uniform static const float3 c_f3_001, { 0.0f, 0.0f, 1.0f } );
+    ispc_construct( uniform static const float3 c_f3_110, { 1.0f, 1.0f, 0.0f } );
+    ispc_construct( uniform static const float3 c_f3_011, { 0.0f, 1.0f, 1.0f } );
+    ispc_construct( uniform static const float3 c_f3_101, { 1.0f, 0.0f, 1.0f } );
+    ispc_construct( uniform static const float3 c_f3_111, { 1.0f, 1.0f, 1.0f } );
+
+    ispc_construct( uniform static const float3 c_f3_333, { 3.0f, 3.0f, 3.0f } );
+
+    _tether_var const float3 i = floor(x);
+    _tether_var const float3 f = frac(x);
+    _tether_var const float3 t = f * f * ( c_f3_333 - f * 2.0f );
+
+    return lerp( lerp( lerp( mixdownF3( i + c_f3_000 ), 
+                             mixdownF3( i + c_f3_100 ), t.x),
+                       lerp( mixdownF3( i + c_f3_010 ),  
+                             mixdownF3( i + c_f3_110 ), t.x), t.y),
+                 lerp( lerp( mixdownF3( i + c_f3_001 ),  
+                             mixdownF3( i + c_f3_101 ), t.x),
+                       lerp( mixdownF3( i + c_f3_011 ),  
+                             mixdownF3( i + c_f3_111 ), t.x), t.y), t.z);
+}
+
+
+#endif // _TETHER_ARG_1

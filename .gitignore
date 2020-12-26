@@ -1,3 +1,13 @@
+_builds/
+_obj/
+.vs/
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.sln
+
+desktop.ini 
+
 # Prerequisites
 *.d
 

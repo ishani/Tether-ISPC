@@ -1,0 +1,167 @@
+// ---------------------------------------------------------------------------------------------------------------------
+// Tether-ISPC by Harry Denholm, ishani.org 2020
+// https://github.com/ishani/Tether-ISPC
+// ---------------------------------------------------------------------------------------------------------------------
+// 
+//
+
+#if !defined( _tether_decl )
+#error this inl file should only be included via common.isph
+#endif
+
+#if _TETHER_ONE_PASS
+
+#define C_ACOS_0         ( 1.57079632679489655799898173427209258f )
+#define C_RCP_ACOS_0     ( 0.63661977236758138243288840385503135f )
+
+// 1.0 / upper limit on atan(sin(x))
+#define C_RCP_ATAN_SIN_LIMIT    ( 1.2732395448718695824646161730554f )
+
+// 1.0 / (pi / 2)
+#define C_RCP_HALFPI     ( 0.63661977236758138243f )
+
+
+// shame we can't have enum-class in ISPC
+enum Note
+{
+    Note_A   = 0,
+    Note_As  = 1,
+    Note_Bb  = 1,    // aliased to As
+    Note_B   = 2,
+    Note_C   = 3,
+    Note_Cs  = 4,
+    Note_Db  = 4,    // aliased to Cs
+    Note_D   = 5,
+    Note_Ds  = 6,
+    Note_Eb  = 6,    // aliased to Ds
+    Note_E   = 7,
+    Note_F   = 8,
+    Note_Fs  = 9,
+    Note_Gb  = 9,    // aliased to Fs
+    Note_G   = 10,
+    Note_Gs  = 11,
+    Note_Ab  = 11    // aliased to Gs
+};
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+struct ConfigADSR
+{
+    float attack;
+    float decay;
+    float sustain;
+    float release;
+    float sustain_amp;
+};
+
+#endif // _TETHER_ONE_PASS
+
+#if _TETHER_ARG_2
+
+// given time t, return an amplitude from the given envelope configuration
+// originally by paniq
+_tether_decl float evaluateEnvelope( _tether_arg1(ConfigADSR) envelope, _tether_arg2_float t )
+{
+    // attack term
+    const _tether_var float ta = t / envelope.attack;
+
+    // decay / sustain amplitude term
+    const _tether_var float td = STDN max( envelope.sustain_amp, 1.0f - (t - envelope.attack) * (1.0f - envelope.sustain_amp) / envelope.decay );
+
+    // length / release term
+    const _tether_var float tr = (1.0f - STDN max( 0.0f, t - (envelope.attack + envelope.decay + envelope.sustain) ) / envelope.release);
+
+    return STDN max( 0.0f, STDN min( ta, tr * td ) );
+}
+
+#endif // _TETHER_ARG_2
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+#if _TETHER_ARG_1
+
+_tether_decl float gainToDb( _tether_arg1_float gain ) 
+{
+    return 20.0f * STDN log10( gain );
+}
+
+_tether_decl float dbToGain( _tether_arg1_float decibels ) 
+{
+    return STDN pow( 10.0f, decibels / 20.0f );
+}
+
+_tether_decl float centsToRatio( _tether_arg1_float cents ) 
+{
+    //                          / ( NOTES_PER_OCTAVE * CENTS_PER_NOTE )
+    return STDN pow( 2.0f, cents / (12 * 100) );
+}
+
+_tether_decl float softClip( _tether_arg1_float s )
+{
+    _tether_var float r = clamp( s, -1.0f, 1.0f );
+    return 1.5f * r - 0.5f * r * r * r;
+}
+
+
+// ---------------------------------------------------------------------------------------------------------------------
+// oscillator waveforms; expect a phase value between 0..1
+
+_tether_decl float oscSine( _tether_arg1_float phase )
+{
+    return STDN sin( phase * C_TWO_PI );
+}
+
+_tether_decl float oscTriangle( _tether_arg1_float phase )
+{
+    _tether_var float rV;
+
+    if ( phase <= 0.5f )
+        rV = phase * 2.0f;
+    else
+        rV = (1.0f - phase) * 2.0f;
+
+    return (rV * 2.0f) - 1.0f;
+}
+
+_tether_decl float oscSquare( _tether_arg1_float phase )
+{
+    if ( phase <= 0.5f )
+        return 1.0f;
+    else
+        return -1.0f;
+}
+
+_tether_decl float oscSawtooth( _tether_arg1_float phase )
+{
+    return ((phase * 2.0f) - 1.0f) * -1.0f;
+}
+
+#endif // _TETHER_ARG_1
+
+#if _TETHER_ARG_2
+
+_tether_decl float oscTriangleMorphic( _tether_arg1_float phase, _tether_arg2_float morphToSine )
+{
+    const _tether_var float sine = STDN sin( phase * C_TWO_PI );
+    return lerp( (C_ACOS_0 - STDN acos( sine )) * C_RCP_ACOS_0, sine, smoothstep( 0.2f, 1.0f, morphToSine ) );
+}
+
+_tether_decl float oscSquareMorphic( _tether_arg1_float phase, _tether_arg2_float morphToSine )
+{
+    const _tether_var float sine = STDN sin( phase * C_TWO_PI );
+    return STDN atan( sine / morphToSine ) * lerp( C_RCP_HALFPI, C_RCP_ATAN_SIN_LIMIT, morphToSine );
+}
+
+_tether_decl float oscSawtoothMorphic( _tether_arg1_float phase, _tether_arg2_float morphToSine )
+{
+    const _tether_var float dx = 0.001f + ( morphToSine * 0.2f );
+
+    const _tether_var float _t = C_ACOS_0 - STDN acos( (1.0f - dx) * STDN sin( phase * C_PI - C_ACOS_0 ) );
+    const _tether_var float _s = STDN atan( STDN sin( phase * C_PI ) / dx );
+
+    const _tether_var float sin_t = STDN sin( phase * C_TWO_PI );
+
+    return lerp( -(_t * _s) * 0.4f, sin_t, smoothstep( 0.3f, 1.0f, morphToSine ) );
+}
+
+#endif // _TETHER_ARG_2
