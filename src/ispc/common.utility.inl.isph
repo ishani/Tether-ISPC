@@ -81,7 +81,7 @@ _tether_decl float3 cosineGradient(
     _tether_arg2(float3) c,
     _tether_arg2(float3) d )
 {
-    return a + b * cos( ( c * t + d ) * (float)C_TWO_PI );
+    return a + b * cos( ( c * t + d ) * C_TWO_PI );
 }
 
 #endif // _TETHER_ARG_2

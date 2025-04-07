@@ -7,6 +7,14 @@
 #pragma once
 #include <stdint.h>
 
+#if !defined(__cplusplus)
+#if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
+#include <stdbool.h>
+#else
+typedef int bool;
+#endif
+#endif
+
 
 
 #ifdef __cplusplus

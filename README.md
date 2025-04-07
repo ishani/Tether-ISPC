@@ -68,7 +68,9 @@ sample-render-clouds:
 
 ### Current Features
 
- - ISPC 1.15.0 support, trivial to retarget to new/old version
+**NOTE** ISPC 1.26's binary (included) has ballooned to almost half a gigabyte but it compresses down to 20MB; go unzip it before use
+
+ - ISPC 1.26.0 support, trivial to retarget to new/old version
  - extensive properties dialog for the build step with all ISPC tunable values exposed
  - proper MSBuild change tracking support for `.ispc` files
  - catch-all change support for `.isph` headers
@@ -134,14 +136,14 @@ The main support files are in `/ispc-msbuild`
 By default, the `ispc.props` file expects a deployment of ISPC one directory back, eg.
 
 ```
-/ispc-1.15.0/bin/ispc.exe
+/ispc-1.26.0/bin/ispc.exe
 /ispc-msbuild/
 ```
 
 .. with the version set in the props file
 ```
   <PropertyGroup>
-      <CompilerName>ispc-1.15.0</CompilerName>
+      <CompilerName>ispc-1.26.0</CompilerName>
   </PropertyGroup>
 ```
 

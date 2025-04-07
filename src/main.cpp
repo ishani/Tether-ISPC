@@ -9,6 +9,10 @@
 #include <cfloat>
 #include <cassert>
 #include <algorithm>
+#include <cmath>
+#include <utility>
+
+#include <string_view>
 
 // ispc & serial function declarations
 #include "ispc/rt.exports.h"
@@ -18,6 +22,7 @@
 #define PICOBENCH_IMPLEMENT
 #include "picobench/pico.h"
 
+#include "ispc/.gen/scratchpad_ispc.gen.h"
 
 #include "support/utility.h"
 #include "support/qlib.fft.h"
@@ -582,10 +587,12 @@ PICOBENCH( sample_fft_serial_qlib )
 
 // ---------------------------------------------------------------------------------------------------------------------
 
+
 int main( int argc, char** argv )
 {
     printf( "Tether-ISPC\n" );
-    printf( "ishani.org 2020\n" );
+    printf( "https://github.com/ishani/Tether-ISPC\n" );
+    printf( "ishani.org 2025\n\n" );
 
     printf( "--------------------------------------------\n" );
     printf( "Running benchmarks, this may take a while...\n\n" );

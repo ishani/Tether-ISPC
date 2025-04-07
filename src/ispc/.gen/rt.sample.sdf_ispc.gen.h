@@ -7,6 +7,14 @@
 #pragma once
 #include <stdint.h>
 
+#if !defined(__cplusplus)
+#if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
+#include <stdbool.h>
+#else
+typedef int bool;
+#endif
+#endif
+
 
 
 #ifdef __cplusplus
@@ -19,9 +27,9 @@ namespace ispc { /* namespace */
 #ifndef __ISPC_VECTOR_float2__
 #define __ISPC_VECTOR_float2__
 #ifdef _MSC_VER
-__declspec( align(8) ) struct float2 { float v[2]; };
+__declspec( align(16) ) struct float2 { float v[2]; };
 #else
-struct float2 { float v[2]; } __attribute__ ((aligned(8)));
+struct float2 { float v[2]; } __attribute__ ((aligned(16)));
 #endif
 #endif
 

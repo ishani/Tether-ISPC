@@ -83,6 +83,18 @@
       Description="Perform non-IEEE-compliant optimizations of numeric expressions."
       Switch="--opt=fast-math" />
     <BoolProperty
+      Name="FastMaskedVLOAD"
+      HelpContext="0"
+      DisplayName="Fast Masked Vector Loads"
+      Description="Faster masked vector loads on SSE (may go past end of array)"
+      Switch="--opt=fast-masked-vload" />
+    <BoolProperty
+      Name="ResetFTZDAZ"
+      HelpContext="0"
+      DisplayName="Reset FTZ/DAZ"
+      Description="Reset FTZ/DAZ flags on ISPC extern function entrance / restore on return"
+      Switch="--opt=reset-ftz-daz" />
+    <BoolProperty
       Name="DisableLoopUnroll"
       HelpContext="0"
       DisplayName="Disable Loop Unroll"
@@ -166,9 +178,9 @@
         DisplayName="aarch64"
         Switch="--arch=aarch64" />
       <EnumValue
-        Name="wasm32"
-        DisplayName="web-asm-32"
-        Switch="--arch=wasm32" />
+        Name="xe64"
+        DisplayName="xe64"
+        Switch="--arch=xe64" />
     </EnumProperty>
 
     <EnumProperty
@@ -183,6 +195,10 @@
         Name="ps4"
         DisplayName="ps4"
         Switch="--target-os=ps4" />
+      <EnumValue
+        Name="ps5"
+        DisplayName="ps5"
+        Switch="--target-os=ps5" />
       <EnumValue
         Name="linux"
         DisplayName="linux"
@@ -203,10 +219,6 @@
         Name="android"
         DisplayName="android"
         Switch="--target-os=android" />
-      <EnumValue
-        Name="web"
-        DisplayName="web"
-        Switch="--target-os=web" />
     </EnumProperty>
 
     <EnumProperty
@@ -215,12 +227,24 @@
       Description="Select CPU targeting.">
       <EnumValue
         Name="ps4"
-        DisplayName="PlayStation 4"
+        DisplayName="PlayStation 4 (btver2)"
         Switch="--cpu=ps4" />
       <EnumValue
-        Name="xb1"
-        DisplayName="Xbox One"
-        Switch="--cpu=btver2" /> <!-- AMD Jaguar, borrow the PS4 path? -->
+        Name="ps5"
+        DisplayName="PlayStation 5 (znver2)"
+        Switch="--cpu=ps5" />
+      <EnumValue
+        Name="znver1"
+        DisplayName="AMD Zen 1"
+        Switch="--cpu=znver1" />
+      <EnumValue
+        Name="znver2"
+        DisplayName="AMD Zen 2"
+        Switch="--cpu=znver2" />
+      <EnumValue
+        Name="znver3"
+        DisplayName="AMD Zen 3"
+        Switch="--cpu=znver3" />
       <EnumValue
         Name="atom"
         DisplayName="Intel Atom (2008)"
@@ -263,16 +287,28 @@
         Switch="--cpu=slm" />
       <EnumValue
         Name="icl"
-        DisplayName="Intel Ice Lake Client (2019)"
+        DisplayName="Intel Ice Lake Client (Gen 10, 2019)"
         Switch="--cpu=icl" />
       <EnumValue
-        Name="arm-cortex-a15"
-        DisplayName="ARM Cortex A15"
-        Switch="--cpu=cortex-a15" />
+        Name="tgl"
+        DisplayName="Intel Tiger Lake (Gen 11, 2020)"
+        Switch="--cpu=tgl" />
       <EnumValue
-        Name="arm-cortex-a9"
-        DisplayName="ARM Cortex A9"
-        Switch="--cpu=cortex-a9" />
+        Name="adl"
+        DisplayName="Intel Alder Lake (Gen 12, 2021)"
+        Switch="--cpu=adl" />
+      <EnumValue
+        Name="mtl"
+        DisplayName="Intel Meteor Lake (Core Ultra S1, 2023)"
+        Switch="--cpu=mtl" />
+      <EnumValue
+        Name="arl"
+        DisplayName="Intel Arrow Lake (Core Ultra S2, 2024)"
+        Switch="--cpu=arl" />
+      <EnumValue
+        Name="lnl"
+        DisplayName="Intel Lunar Lake (Core Ultra 200V, 2024)"
+        Switch="--cpu=lnl" />
       <EnumValue
         Name="arm-cortex-a35"
         DisplayName="ARM Cortex A35"
@@ -285,6 +321,58 @@
         Name="arm-cortex-a57"
         DisplayName="ARM Cortex A57"
         Switch="--cpu=cortex-a57" />
+      <EnumValue
+        Name="arm-cortex-a55"
+        DisplayName="ARM Cortex A55"
+        Switch="--cpu=cortex-a55" />
+      <EnumValue
+        Name="arm-cortex-a78"
+        DisplayName="ARM Cortex A78"
+        Switch="--cpu=cortex-a78" />
+      <EnumValue
+        Name="arm-cortex-a510"
+        DisplayName="ARM Cortex A510"
+        Switch="--cpu=cortex-a510" />
+      <EnumValue
+        Name="arm-cortex-a520"
+        DisplayName="ARM Cortex A520"
+        Switch="--cpu=cortex-a520" />
+      <EnumValue
+        Name="apple-a7"
+        DisplayName="Apple A7"
+        Switch="--cpu=apple-a7" />
+      <EnumValue
+        Name="apple-a10"
+        DisplayName="Apple A10"
+        Switch="--cpu=apple-a10" />
+      <EnumValue
+        Name="apple-a11"
+        DisplayName="Apple A11"
+        Switch="--cpu=apple-a11" />
+      <EnumValue
+        Name="apple-a12"
+        DisplayName="Apple A12"
+        Switch="--cpu=apple-a12" />
+      <EnumValue
+        Name="apple-a13"
+        DisplayName="Apple A13"
+        Switch="--cpu=apple-a13" />
+      <EnumValue
+        Name="apple-a14"
+        DisplayName="Apple A14"
+        Switch="--cpu=apple-a14" />
+      <EnumValue
+        Name="apple-a15"
+        DisplayName="Apple A15"
+        Switch="--cpu=apple-a15" />
+      <EnumValue
+        Name="apple-a16"
+        DisplayName="Apple A16"
+        Switch="--cpu=apple-a16" />
+      <EnumValue
+        Name="apple-a17"
+        DisplayName="Apple A17"
+        Switch="--cpu=apple-a17" />
     </EnumProperty>
 
 
@@ -301,29 +389,9 @@
         DisplayName="host"
         Switch="--target=host" />
       <EnumValue
-        Name="sse2-i32x4"
-        DisplayName="sse2-i32x4"
-        Switch="--target=sse2-i32x4" />
-      <EnumValue
-        Name="sse2-i32x8"
-        DisplayName="sse2-i32x8"
-        Switch="--target=sse2-i32x8" />
-      <EnumValue
-        Name="sse4-i32x4"
-        DisplayName="sse4-i32x4"
-        Switch="--target=sse4-i32x4" />
-      <EnumValue
-        Name="sse4-i32x8"
-        DisplayName="sse4-i32x8"
-        Switch="--target=sse4-i32x8" />
-      <EnumValue
-        Name="sse4-i16x8"
-        DisplayName="sse4-i16x8"
-        Switch="--target=sse4-i16x8" />
-      <EnumValue
-        Name="sse4-i8x16"
-        DisplayName="sse4-i8x16"
-        Switch="--target=sse4-i8x16" />
+        Name="avx1-i32x16"
+        DisplayName="avx1-i32x16"
+        Switch="--target=avx1-i32x16" />
       <EnumValue
         Name="avx1-i32x4"
         DisplayName="avx1-i32x4"
@@ -333,21 +401,17 @@
         DisplayName="avx1-i32x8"
         Switch="--target=avx1-i32x8" />
       <EnumValue
-        Name="avx1-i32x16"
-        DisplayName="avx1-i32x16"
-        Switch="--target=avx1-i32x16" />
-      <EnumValue
         Name="avx1-i64x4"
         DisplayName="avx1-i64x4"
         Switch="--target=avx1-i64x4" />
       <EnumValue
-        Name="avx2-i8x32"
-        DisplayName="avx2-i8x32"
-        Switch="--target=avx2-i8x32" />
-      <EnumValue
         Name="avx2-i16x16"
         DisplayName="avx2-i16x16"
         Switch="--target=avx2-i16x16" />
+      <EnumValue
+        Name="avx2-i32x16"
+        DisplayName="avx2-i32x16"
+        Switch="--target=avx2-i32x16" />
       <EnumValue
         Name="avx2-i32x4"
         DisplayName="avx2-i32x4"
@@ -357,37 +421,145 @@
         DisplayName="avx2-i32x8"
         Switch="--target=avx2-i32x8" />
       <EnumValue
-        Name="avx2-i32x16"
-        DisplayName="avx2-i32x16"
-        Switch="--target=avx2-i32x16" />
-      <EnumValue
         Name="avx2-i64x4"
         DisplayName="avx2-i64x4"
         Switch="--target=avx2-i64x4" />
       <EnumValue
-        Name="avx512skx-i8x64"
-        DisplayName="avx512skx-i8x64"
-        Switch="--target=avx512skx-i8x64" />
+        Name="avx2-i8x32"
+        DisplayName="avx2-i8x32"
+        Switch="--target=avx2-i8x32" />
       <EnumValue
-        Name="avx512skx-i16x32"
-        DisplayName="avx512skx-i16x32"
-        Switch="--target=avx512skx-i16x32" />
+        Name="avx2vnni-i32x16"
+        DisplayName="avx2vnni-i32x16"
+        Switch="--target=avx2vnni-i32x16" />
       <EnumValue
-        Name="avx512knl-i32x16"
-        DisplayName="avx512knl-i32x16"
-        Switch="--target=avx512knl-i32x16" />
+        Name="avx2vnni-i32x4"
+        DisplayName="avx2vnni-i32x4"
+        Switch="--target=avx2vnni-i32x4" />
       <EnumValue
-        Name="avx512skx-i32x16"
-        DisplayName="avx512skx-i32x16"
-        Switch="--target=avx512skx-i32x16" />
+        Name="avx2vnni-i32x8"
+        DisplayName="avx2vnni-i32x8"
+        Switch="--target=avx2vnni-i32x8" />
       <EnumValue
-        Name="avx512skx-i32x8"
-        DisplayName="avx512skx-i32x8"
-        Switch="--target=avx512skx-i32x8" />
+        Name="avx512icl-x16"
+        DisplayName="avx512icl-x16"
+        Switch="--target=avx512icl-x16" />
       <EnumValue
-        Name="neon-i8x16"
-        DisplayName="neon-i8x16"
-        Switch="--target=neon-i8x16" />
+        Name="avx512icl-x32"
+        DisplayName="avx512icl-x32"
+        Switch="--target=avx512icl-x32" />
+      <EnumValue
+        Name="avx512icl-x4"
+        DisplayName="avx512icl-x4"
+        Switch="--target=avx512icl-x4" />
+      <EnumValue
+        Name="avx512icl-x64"
+        DisplayName="avx512icl-x64"
+        Switch="--target=avx512icl-x64" />
+      <EnumValue
+        Name="avx512icl-x8"
+        DisplayName="avx512icl-x8"
+        Switch="--target=avx512icl-x8" />
+      <EnumValue
+        Name="avx512skx-x16"
+        DisplayName="avx512skx-x16"
+        Switch="--target=avx512skx-x16" />
+      <EnumValue
+        Name="avx512skx-x32"
+        DisplayName="avx512skx-x32"
+        Switch="--target=avx512skx-x32" />
+      <EnumValue
+        Name="avx512skx-x4"
+        DisplayName="avx512skx-x4"
+        Switch="--target=avx512skx-x4" />
+      <EnumValue
+        Name="avx512skx-x64"
+        DisplayName="avx512skx-x64"
+        Switch="--target=avx512skx-x64" />
+      <EnumValue
+        Name="avx512skx-x8"
+        DisplayName="avx512skx-x8"
+        Switch="--target=avx512skx-x8" />
+      <EnumValue
+        Name="avx512spr-x16"
+        DisplayName="avx512spr-x16"
+        Switch="--target=avx512spr-x16" />
+      <EnumValue
+        Name="avx512spr-x32"
+        DisplayName="avx512spr-x32"
+        Switch="--target=avx512spr-x32" />
+      <EnumValue
+        Name="avx512spr-x4"
+        DisplayName="avx512spr-x4"
+        Switch="--target=avx512spr-x4" />
+      <EnumValue
+        Name="avx512spr-x64"
+        DisplayName="avx512spr-x64"
+        Switch="--target=avx512spr-x64" />
+      <EnumValue
+        Name="avx512spr-x8"
+        DisplayName="avx512spr-x8"
+        Switch="--target=avx512spr-x8" />
+      <EnumValue
+        Name="gen9-x16"
+        DisplayName="gen9-x16"
+        Switch="--target=gen9-x16" />
+      <EnumValue
+        Name="gen9-x8"
+        DisplayName="gen9-x8"
+        Switch="--target=gen9-x8" />
+      <EnumValue
+        Name="generic-i16x16"
+        DisplayName="generic-i16x16"
+        Switch="--target=generic-i16x16" />
+      <EnumValue
+        Name="generic-i16x8"
+        DisplayName="generic-i16x8"
+        Switch="--target=generic-i16x8" />
+      <EnumValue
+        Name="generic-i1x16"
+        DisplayName="generic-i1x16"
+        Switch="--target=generic-i1x16" />
+      <EnumValue
+        Name="generic-i1x32"
+        DisplayName="generic-i1x32"
+        Switch="--target=generic-i1x32" />
+      <EnumValue
+        Name="generic-i1x4"
+        DisplayName="generic-i1x4"
+        Switch="--target=generic-i1x4" />
+      <EnumValue
+        Name="generic-i1x8"
+        DisplayName="generic-i1x8"
+        Switch="--target=generic-i1x8" />
+      <EnumValue
+        Name="generic-i32x16"
+        DisplayName="generic-i32x16"
+        Switch="--target=generic-i32x16" />
+      <EnumValue
+        Name="generic-i32x4"
+        DisplayName="generic-i32x4"
+        Switch="--target=generic-i32x4" />
+      <EnumValue
+        Name="generic-i32x8"
+        DisplayName="generic-i32x8"
+        Switch="--target=generic-i32x8" />
+      <EnumValue
+        Name="generic-i64x4"
+        DisplayName="generic-i64x4"
+        Switch="--target=generic-i64x4" />
+      <EnumValue
+        Name="generic-i8x16"
+        DisplayName="generic-i8x16"
+        Switch="--target=generic-i8x16" />
+      <EnumValue
+        Name="generic-i8x32"
+        DisplayName="generic-i8x32"
+        Switch="--target=generic-i8x32" />
+      <EnumValue
+        Name="neon-i16x16"
+        DisplayName="neon-i16x16"
+        Switch="--target=neon-i16x16" />
       <EnumValue
         Name="neon-i16x8"
         DisplayName="neon-i16x8"
@@ -401,9 +573,101 @@
         DisplayName="neon-i32x8"
         Switch="--target=neon-i32x8" />
       <EnumValue
-        Name="wasm-i32x4"
-        DisplayName="wasm-i32x4"
-        Switch="--target=wasm-i32x4" />
+        Name="neon-i8x16"
+        DisplayName="neon-i8x16"
+        Switch="--target=neon-i8x16" />
+      <EnumValue
+        Name="neon-i8x32"
+        DisplayName="neon-i8x32"
+        Switch="--target=neon-i8x32" />
+      <EnumValue
+        Name="sse2-i32x4"
+        DisplayName="sse2-i32x4"
+        Switch="--target=sse2-i32x4" />
+      <EnumValue
+        Name="sse2-i32x8"
+        DisplayName="sse2-i32x8"
+        Switch="--target=sse2-i32x8" />
+      <EnumValue
+        Name="sse4.1-i16x8"
+        DisplayName="sse4.1-i16x8"
+        Switch="--target=sse4.1-i16x8" />
+      <EnumValue
+        Name="sse4.1-i32x4"
+        DisplayName="sse4.1-i32x4"
+        Switch="--target=sse4.1-i32x4" />
+      <EnumValue
+        Name="sse4.1-i32x8"
+        DisplayName="sse4.1-i32x8"
+        Switch="--target=sse4.1-i32x8" />
+      <EnumValue
+        Name="sse4.1-i8x16"
+        DisplayName="sse4.1-i8x16"
+        Switch="--target=sse4.1-i8x16" />
+      <EnumValue
+        Name="sse4.2-i16x8"
+        DisplayName="sse4.2-i16x8"
+        Switch="--target=sse4.2-i16x8" />
+      <EnumValue
+        Name="sse4.2-i32x4"
+        DisplayName="sse4.2-i32x4"
+        Switch="--target=sse4.2-i32x4" />
+      <EnumValue
+        Name="sse4.2-i32x8"
+        DisplayName="sse4.2-i32x8"
+        Switch="--target=sse4.2-i32x8" />
+      <EnumValue
+        Name="sse4.2-i8x16"
+        DisplayName="sse4.2-i8x16"
+        Switch="--target=sse4.2-i8x16" />
+      <EnumValue
+        Name="xe2hpg-x16"
+        DisplayName="xe2hpg-x16"
+        Switch="--target=xe2hpg-x16" />
+      <EnumValue
+        Name="xe2hpg-x32"
+        DisplayName="xe2hpg-x32"
+        Switch="--target=xe2hpg-x32" />
+      <EnumValue
+        Name="xe2lpg-x16"
+        DisplayName="xe2lpg-x16"
+        Switch="--target=xe2lpg-x16" />
+      <EnumValue
+        Name="xe2lpg-x32"
+        DisplayName="xe2lpg-x32"
+        Switch="--target=xe2lpg-x32" />
+      <EnumValue
+        Name="xehpc-x16"
+        DisplayName="xehpc-x16"
+        Switch="--target=xehpc-x16" />
+      <EnumValue
+        Name="xehpc-x32"
+        DisplayName="xehpc-x32"
+        Switch="--target=xehpc-x32" />
+      <EnumValue
+        Name="xehpg-x16"
+        DisplayName="xehpg-x16"
+        Switch="--target=xehpg-x16" />
+      <EnumValue
+        Name="xehpg-x8"
+        DisplayName="xehpg-x8"
+        Switch="--target=xehpg-x8" />
+      <EnumValue
+        Name="xelp-x16"
+        DisplayName="xelp-x16"
+        Switch="--target=xelp-x16" />
+      <EnumValue
+        Name="xelp-x8"
+        DisplayName="xelp-x8"
+        Switch="--target=xelp-x8" />
+      <EnumValue
+        Name="xelpg-x16"
+        DisplayName="xelpg-x16"
+        Switch="--target=xelpg-x16" />
+      <EnumValue
+        Name="xelpg-x8"
+        DisplayName="xelpg-x8"
+        Switch="--target=xelpg-x8" />
     </EnumProperty>
 
     <EnumProperty

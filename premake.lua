@@ -116,6 +116,7 @@ workspace ("Tether_" .. _ACTION)
 project "Tether"
     kind "ConsoleApp"
     language "C++"
+    cppdialect "C++20"
 
     ConfigureCommonBuildSettings()
     ConfigureCommonBuildFiles()

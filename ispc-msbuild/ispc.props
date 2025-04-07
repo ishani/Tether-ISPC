@@ -10,7 +10,7 @@
       Condition="'$(ConfigurationType)' != 'Makefile'">_SelectedFiles;$(ISPCDependsOn)</ISPCDependsOn>
   </PropertyGroup>
   <PropertyGroup>
-      <CompilerName>ispc-1.15.0</CompilerName>
+      <CompilerName>ispc-1.26.0</CompilerName>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ISPC>

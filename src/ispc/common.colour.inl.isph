@@ -1,0 +1,5 @@
+
+
+#if !defined( _tether_decl )
+#error this inl file should only be included via common.isph
+#endif

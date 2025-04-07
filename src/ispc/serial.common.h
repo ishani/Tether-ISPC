@@ -268,6 +268,128 @@ constexpr const T& clamp(const T& v, const T& lo, const T& hi)
 #include "common.sdf.inl.isph"
 #include "common.audio.inl.isph"
 
+
+
+// ---------------------------------------------------------------------------------------------------------------------
+// 
+inline float3 gradient_turbo( const float  t )
+{
+    ispc_construct( static uniform const float3 c0, { 0.0002189403691192265f, 0.001651004631001012f, -0.01948089843709184f } );
+    ispc_construct( static uniform const float3 c1, { 0.1065134194856116f,    0.5639564367884091f,    3.932712388889277f } );
+    ispc_construct( static uniform const float3 c2, { 11.60249308247187f,     -3.972853965665698f,   -15.9423941062914f } );
+    ispc_construct( static uniform const float3 c3, { -41.70399613139459f,     17.43639888205313f,     44.35414519872813f } );
+    ispc_construct( static uniform const float3 c4, { 77.162935699427f,      -33.40235894210092f,    -81.80730925738993f } );
+    ispc_construct( static uniform const float3 c5, { -71.31942824499214f,     32.62606426397723f,     73.20951985803202f } );
+    ispc_construct( static uniform const float3 c6, { 25.13112622477341f,    -12.24266895238567f,    -23.07032500287172f } );
+
+    return saturate( c0 + t * (c1 + t * (c2 + t * (c3 + t * (c4 + t * (c5 + t * c6))))) );
+}
+
+inline uint32_t gradient_turbo_u32( const float  t )
+{
+    return rgbFloatToU32( gradient_turbo( t ) );
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// 
+inline float3 gradient_viridis( const float  t )
+{
+    ispc_construct( static uniform const float3 c0, { 0.2777273272234177f,  0.005407344544966578f,  0.3340998053353061f } );
+    ispc_construct( static uniform const float3 c1, { 0.1050930431085774f,  1.404613529898575f,     1.384590162594685f } );
+    ispc_construct( static uniform const float3 c2, { -0.3308618287255563f,  0.214847559468213f,     0.09509516302823659f } );
+    ispc_construct( static uniform const float3 c3, { -4.634230498983486f,  -5.799100973351585f,   -19.33244095627987f } );
+    ispc_construct( static uniform const float3 c4, { 6.228269936347081f,  14.17993336680509f,     56.69055260068105f } );
+    ispc_construct( static uniform const float3 c5, { 4.776384997670288f, -13.74514537774601f,    -65.35303263337234f } );
+    ispc_construct( static uniform const float3 c6, { -5.435455855934631f,   4.645852612178535f,    26.3124352495832f } );
+
+    return (c0 + t * (c1 + t * (c2 + t * (c3 + t * (c4 + t * (c5 + t * c6))))));
+}
+
+inline uint32_t gradient_viridis_u32( const float  t )
+{
+    return rgbFloatToU32( gradient_viridis( t ) );
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// https://www.shadertoy.com/view/3dByzK
+//
+inline float3 gradient_rainbow( float  t )
+{
+    t *= 6.283185307179586f;
+    ispc_construct( uniform const float2 cs1, { cosf( t ), sinf( t ) } );
+    ispc_construct( uniform const float2 cs2, { cosf( 2.0f * t ), sinf( 2.0f * t ) } );
+
+
+    ispc_construct( static uniform const float3 v0, { 0.4499723076135584f,  0.609426607533859f,   0.4288887656855271f } );
+    ispc_construct( static uniform const float3 v1, { 1.356958715978088f,  -0.6223492834243289f, -0.2455749072607498f } );
+    ispc_construct( static uniform const float3 v2, { -0.2058207830435541f,  0.4820199928163624f, -0.8671833275731918f } );
+    ispc_construct( static uniform const float3 v3, { -0.2862391770341579f,  0.05434355975084173f, 0.4356605836093163f } );
+    ispc_construct( static uniform const float3 v4, { -0.5279746052180661f, -0.1719661920391326f, -0.2836479508431202f } );
+
+
+    ispc_construct( static uniform const float3 r0, { 1.0f,                 1.0f,                 1.0f } );
+    ispc_construct( static uniform const float3 r1, { 0.7153502777378531f, -0.9219020024148035f, -0.2910109117528888f } );
+    ispc_construct( static uniform const float3 r2, { -0.3381133734426577f,  0.7903005432576772f, -0.3172368432843283f } );
+    ispc_construct( static uniform const float3 r3, { -0.2639897520454177f,  0.06346650999193199f, 0.5784878335459051f } );
+    ispc_construct( static uniform const float3 r4, { -0.3066564712099898f, -0.2161956627263612f, -0.2188031991633754f } );
+
+    uniform float3 n = v0;
+    n += (v1 * cs1.x);
+    n += (v2 * cs1.y);
+    n += (v3 * cs2.x);
+    n += (v4 * cs2.y); 
+        
+    uniform float3 d = r0;
+    d += (r1 * cs1.x);
+    d += (r2 * cs1.y);
+    d += (r3 * cs2.x);
+    d += (r4 * cs2.y);
+
+    float3 result = n / d;
+
+    return result;
+}
+
+inline uint32_t gradient_rainbow_u32( const float  t )
+{
+    return rgbFloatToU32( gradient_rainbow( t ) );
+}
+
+
+// ---------------------------------------------------------------------------------------------------------------------
+// https://www.shadertoy.com/view/3dByzK
+//
+inline  float3 gradient_pastel( const  float  t )
+{
+    ispc_construct( uniform const float2 cs1, { cos( 1.0f * t * 6.283185307179586f ), sin( 1.0f * t * 6.283185307179586f ) } );
+    ispc_construct( uniform const float2 cs2, { cos( 2.0f * t * 6.283185307179586f ), sin( 2.0f * t * 6.283185307179586f ) } );
+
+
+    ispc_construct( static uniform const float3 v0, { 0.6698260593431076f,   0.5741866585654442f,    0.6074284221076398f } );
+    ispc_construct( static uniform const float3 v1, { 0.8263467981452095f,  -0.2020418406514409f,   -0.06579882943043414f } );
+    ispc_construct( static uniform const float3 v2, { 0.1278739528808921f,   0.2055033211946446f,   -0.4912381708231384f } );
+    ispc_construct( static uniform const float3 v3, { 0.1580550606222037f,  -0.002035314944658304f, -0.03683228443676777f } );
+    ispc_construct( static uniform const float3 v4, { 0.05270503006417088f, -0.01747401166680522f,   0.01104082480565293f } );
+
+
+    ispc_construct( static uniform const float3 r0, { 1.0f,                  1.0f,                   1.0f } );
+    ispc_construct( static uniform const float3 r1, { 1.045501814882021f,   -0.227676649398989f,    -0.07644732041559271f } );
+    ispc_construct( static uniform const float3 r2, { 0.2273682478445634f,   0.3236347287584649f,   -0.4813798195577666f } );
+    ispc_construct( static uniform const float3 r3, { 0.0975546708844913f,  -0.009724725764886694f,  0.004645741124919443f } );
+    ispc_construct( static uniform const float3 r4, { 0.06757418348606457f, -0.01672661576390289f,   0.002341600573231208f } );
+
+    uniform float3 n = v0 + (v1 * cs1.x) + (v2 * cs1.y) + (v3 * cs2.x) + (v4 * cs2.y);
+    uniform float3 d = r0 + (r1 * cs1.x) + (r2 * cs1.y) + (r3 * cs2.x) + (r4 * cs2.y);
+
+    return n / d;
+}
+
+inline  uint32_t gradient_pastel_u32( const  float  t )
+{
+    return rgbFloatToU32( gradient_rainbow( t ) );
+}
+
+
 #undef _tether_arg3_double
 #undef _tether_arg2_double
 #undef _tether_arg1_double
